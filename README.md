@@ -34,7 +34,7 @@ ROS 2 Jazzy と Navigation 2 を用いて、TurtleBot3 が標準ワールド内�
 
 1.  **本レポジトリのクローン:**
     ```bash
-    git clone https://github.com/tsfk9981/turtlebot3_nav2_ws ~/turtlebot3_nav2_ws    ```
+    git clone https://github.com/tsfk9981/turtlebot3_nav2_ws ~/turtlebot3_nav2_ws
 
 2.  **ビルドの実行:**
     ```bash
