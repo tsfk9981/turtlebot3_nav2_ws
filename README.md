@@ -1,92 +1,76 @@
-# TurtleBot3 連続自律移動プログラム (ROS 2 Jazzy / Navigation 2)
+# TurtleBot3 連続自律移動プログラム
 
-ROS 2 Jazzy と Navigation 2 を用いて、TurtleBot3 が Gazebo の標準ワールド内で障害物にぶつからずに動き続けるためのPython制御プログラムです。ラップトップでの動作を考慮し、軽量な処理を目指しています。
+ROS 2 Jazzy と Navigation 2 を用いて、TurtleBot3 が標準ワールド内で障害物にぶつからずに動き続けるためのPython制御プログラムです。
 
-## 🤖 システム要件
+## 前提システム要件
 
 * **OS**: Ubuntu 24.04 LTS
-* **ROS 2**: Jazzy Jalisco
-* **Gazebo**: Gazebo Harmonic (gz-sim 7) - ROS 2 Jazzy で推奨
-* **TurtleBot3**: シミュレーションモデル (Burger, Waffle, Waffle Pi)
-* **Navigation 2**: ROS 2 Jazzy に対応するバージョン
+* **ROS 2**: Jazzy (LTS)
+* **Gazebo**: Harmonic (LTS)
 
-## 🛠️ 必要なパッケージのインストール
+## 必要なパッケージのインストール
 
 1.  **ROS 2 Jazzy (Desktop) のインストール:**
     ROS 2 の公式ドキュメントに従ってインストールしてください。
-    ```bash
-    sudo apt update && sudo apt upgrade -y
-    sudo apt install -y ros-jazzy-desktop ros-dev-tools
-    echo "source /opt/ros/jazzy/setup.bash" >> ~/.bashrc
-    source ~/.bashrc
-    ```
+    https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html
 
-2.  **Gazebo (gz-sim) と ROS 2-Gazebo連携パッケージ:**
-    ```bash
-    sudo apt install -y gz-harmonic # Gazebo Harmonic (gz-sim 7)
-    sudo apt install -y ros-jazzy-ros-gzgarden # gz-sim と ROS 2 の連携
-    ```
+2.  **Gazeboと ROS 2-Gazebo連携パッケージのインストール:**
+    Gazeboの公式ドキュメントに従ってインストールしてください。
+    https://gazebosim.org/docs/harmonic/ros_installation/
 
-3.  **Colcon とその他ツール:**
+3.  **Colcon とその他ツールのインストール:**
     ```bash
     sudo apt install -y python3-colcon-common-extensions python3-vcstool git
     ```
 
-4.  **TurtleBot3 シミュレーションと Navigation 2 パッケージ:**
+4.  **TurtleBot3 シミュレーションと Navigation 2 パッケージのインストール:**
     ```bash
     sudo apt install -y ros-jazzy-turtlebot3 ros-jazzy-turtlebot3-simulations
     sudo apt install -y ros-jazzy-navigation2 ros-jazzy-nav2-bringup
-    sudo apt install -y python3-tf-transformations # Pythonでの座標変換用
+    sudo apt install ros-jazzy-tf-transformations
     ```
-    *注意:* `ros-jazzy-turtlebot3-simulations` が `gz-sim` (Gazebo Harmonic) を使用することを確認してください。
 
-## 📦 プログラムのセットアップとビルド
+## ビルド手順
 
-1.  **ROS 2 ワークスペースの作成:**
+1.  **本レポジトリのクローン:**
     ```bash
-    mkdir -p ~/turtlebot3_nav2_ws/src
-    cd ~/turtlebot3_nav2_ws/src
-    ```
+    git clone https://github.com/tsfk9981/turtlebot3_nav2_ws ~/turtlebot3_nav2_ws    ```
 
-2.  **本プログラムのソースコードを配置:**
-    `continuous_navigator` という名前のパッケージを作成します。
+2.  **ビルドの実行:**
     ```bash
-    ros2 pkg create --build-type ament_python continuous_navigator --dependencies rclpy nav2_simple_commander geometry_msgs tf_transformations
-    ```
-    作成された `continuous_navigator` ディレクトリ内に、上記の `continuous_navigator.py` というファイル名でPythonスクリプトを保存します (例: `~/turtlebot3_nav2_ws/src/continuous_navigator/continuous_navigator/continuous_navigator.py`)。
-    `setup.py` の `entry_points` を編集してスクリプトを実行可能にします。
-
-    **`~/turtlebot3_nav2_ws/src/continuous_navigator/setup.py` の `entry_points` 部分を以下のように修正:**
-    ```python
-    entry_points={
-        'console_scripts': [
-            'navigator_node = continuous_navigator.continuous_navigator:main',
-        ],
-    },
-    ```
-    **`~/turtlebot3_nav2_ws/src/continuous_navigator/package.xml` に依存関係が正しく記述されているか確認:**
-    `<exec_depend>rclpy</exec_depend>`
-    `<exec_depend>nav2_simple_commander</exec_depend>`
-    `<exec_depend>geometry_msgs</exec_depend>`
-    `<exec_depend>python3-tf-transformations</exec_depend>` (または `tf_transformations` として記載し、`rosdep` で解決)
-
-3.  **ビルド:**
-    ```bash
-    cd ~/turtlebot3_nav2_ws
-    # rosdep install -i --from-path src -y --skip-keys "gz-harmonic gz-plugin python-tf-transformations" # 不足している依存関係をインストール
+    cd turtlebot3_nav2_ws
     colcon build --symlink-install
     ```
 
-4.  **環境設定の読み込み:**
-    ビルドしたワークスペースのセットアップファイルを実行します。
+## 動作確認方法
+
+### ターミナル１
+1.  **環境変数の設定：**
     ```bash
-    echo "source ~/turtlebot3_nav2_ws/install/setup.bash" >> ~/.bashrc
-    source ~/.bashrc
+    source /opt/ros/jazzy/setup.bash
+    source ~/turtlebot3_nav2_ws/install/setup.bash
+    export TURTLEBOT3_MODEL=waffle
     ```
 
-## 🚀 動作確認方法
+2.  **GazeboとTurtlebot3モデルの起動：**
+    ```bash
+    ros2 launch nav2_bringup tb3_simulation_launch.py use_sim_time:=True headless:=False slam:=True
+    ```
 
-**重要:** TurtleBot3のモデル (burger, waffle, waffle_pi) に応じて、環境変数 `TURTLEBOT3_MODEL` を設定してください。
-```bash
-export TURTLEBOT3_MODEL=burger # 例: burgerモデルの場合
-# または waffle, waffle_pi
+3.  **GazeboとRvizが正常に起動していることを確認：**
+    
+    正常に起動できている場合、Rviz上でNav2 Goalを設定するとTurtleBot3が障害物を避けながら目的地まで移動します。
+
+### ターミナル2
+1.  **環境変数の設定**
+    ```bash
+    source /opt/ros/jazzy/setup.bash
+    source ~/turtlebot3_nav2_ws/install/setup.bash
+    export TURTLEBOT3_MODEL=waffle
+    ```
+
+2.  **コントローラーの起動：**
+    ```bash
+    ros2 run continuous_navigator navigator_node
+    ```
+    このコントローラーではNavigation 2上のNav2 Goalを定期的に更新し、TurtleBot3が障害物にぶつからず動き続ける動作を実現します。
